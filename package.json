@@ -1,5 +1,5 @@
 {
-  "name": "nestjs-rabbitmq",
+  "name": "nestjs-rabbit",
   "version": "0.1.4",
   "description": "NestJS custom stratagy for RabbitMQ",
   "main": "./dist/index.js",
