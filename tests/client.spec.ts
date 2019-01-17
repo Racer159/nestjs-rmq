@@ -51,19 +51,19 @@ describe('publish()', () => {
 
     it('should connect if not connected', () => {
         (client as any).client = null;
-        client['publish']('', x => {});
+        client['publish']({pattern: '', data: ''}, x => {});
         expect((client as any).connect.called).to.be.true;
     });
 
     it('should not connect if connected', () => {
         (client as any).client = true;
-        client['publish']('', x => {});
+        client['publish']({pattern: '', data: ''}, x => {});
         expect((client as any).connect.called).to.be.false;
     });
 
     it('should call sendToQueue', () => {
         (client as any).client = true;
-        client['publish']('', x => {});
+        client['publish']({pattern: '', data: ''}, x => {});
         expect((client as any).channel.sendToQueue.called).to.be.true;
     });
 });

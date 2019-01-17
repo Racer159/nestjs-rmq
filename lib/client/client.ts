@@ -1,5 +1,5 @@
 import { Options } from 'amqplib';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, WritePacket, ReadPacket } from '@nestjs/microservices';
 import { IClientOptions } from './client.interface';
 import { EventEmitter } from 'events';
 import {
@@ -77,22 +77,26 @@ export class ClientRMQ extends ClientProxy {
         });
     }
 
-    protected async publish(messageObj, callback: (err, result, disposed?: boolean) => void) {
+    protected publish(messageObj: ReadPacket, callback: (writePacket: WritePacket) => void) {
         try {
             if (!this.client) {
-                await this.connect();
+                this.connect().then(() => this.publishMessage(messageObj, callback));
             }
-            const correlationId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            this.responseEmitter.on(correlationId, msg => {
-                this.handleMessage(msg, callback);
-            });
-            this.channel.sendToQueue(this.queue, Buffer.from(JSON.stringify(messageObj)), {
-                replyTo: this.replyQueue,
-                correlationId,
-            });
+            this.publishMessage(messageObj, callback);
         } catch (err) {
-            callback(err, null);
+            callback({err, response: null});
         }
+    }
+
+    private publishMessage(messageObj: ReadPacket, callback: (writePacket: WritePacket) => void) {
+        const correlationId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        this.responseEmitter.on(correlationId, msg => {
+            this.handleMessage(msg, callback);
+        });
+        this.channel.sendToQueue(this.queue, Buffer.from(JSON.stringify(messageObj)), {
+            replyTo: this.replyQueue,
+            correlationId,
+        });
     }
 
     private async handleMessage(message, callback): Promise<void> {
